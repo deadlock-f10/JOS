@@ -46,7 +46,7 @@ printnum(void (*putch)(int, void*), void *putdat,
 	}
 
 	// then print this (the least significant) digit
-	putch("0123456789abcdef"[num % base], putdat);
+	putch("0123456789abcdef"[num % base], putdat);            // cool!!
 }
 
 // Get an unsigned int of various possible sizes from a varargs list,
@@ -206,10 +206,13 @@ vprintfmt(void (*putch)(int, void*), void *putdat, const char *fmt, va_list ap)
 		// (unsigned) octal
 		case 'o':
 			// Replace this with your code.
+/*			putch('X', putdat);
 			putch('X', putdat);
 			putch('X', putdat);
-			putch('X', putdat);
-			break;
+			break;*/
+			num = getuint(&ap,lflag);
+			base = 8;
+			goto number;
 
 		// pointer
 		case 'p':
