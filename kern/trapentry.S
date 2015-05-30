@@ -1,10 +1,10 @@
 /* See COPYRIGHT for copyright information. */
-
 #include <inc/mmu.h>
 #include <inc/memlayout.h>
 #include <inc/trap.h>
 
 
+ /* In Exercise4, it says,"push values to make the stack look like a struct Trapframe" , go and check the definition of Trapframe,then you will understand what the "look like" means and every pierce of instruction  */
 
 ###################################################################
 # exceptions/interrupts
@@ -32,6 +32,7 @@
  * It pushes a 0 in place of the error code, so the trap frame has the same
  * format in either case.
  */
+/* The nessarity  to distinguish TRAPHANDLER and TRAPHANDLER_NOEC is also to "make the stack look like a struct trapframe"*/
 #define TRAPHANDLER_NOEC(name, num)					\
 	.globl name;							\
 	.type name, @function;						\
@@ -46,10 +47,38 @@
 /*
  * Lab 3: Your code here for generating entry points for the different traps.
  */
+TRAPHANDLER_NOEC(routine_divide,T_DIVIDE)
+TRAPHANDLER_NOEC(routine_debug,T_DEBUG)
+TRAPHANDLER_NOEC(routine_nmi,T_NMI)
+TRAPHANDLER_NOEC(routine_brkpt,T_BRKPT)
+TRAPHANDLER_NOEC(routine_oflow,T_OFLOW)
+TRAPHANDLER_NOEC(routine_bound,T_BOUND)
+TRAPHANDLER_NOEC(routine_illop,T_ILLOP)
+TRAPHANDLER_NOEC(routine_device,T_DEVICE)
+TRAPHANDLER(routine_dblflt,T_DBLFLT)
+TRAPHANDLER(routine_tss,T_TSS)
+TRAPHANDLER(routine_segnp,T_SEGNP)
+TRAPHANDLER(routine_stack,T_STACK)
+TRAPHANDLER(routine_gpflt,T_GPFLT)
+TRAPHANDLER(routine_pgflt,T_PGFLT)
+TRAPHANDLER(routine_fperr,T_FPERR)
+TRAPHANDLER(routine_align,T_ALIGN)
+TRAPHANDLER(routine_mchk,T_MCHK)
+TRAPHANDLER(routine_simderr,T_SIMDERR)
 
-
-
+TRAPHANDLER_NOEC(routine_syscall,T_SYSCALL)
 /*
  * Lab 3: Your code here for _alltraps
  */
+_alltraps:
+pushw $0x0          /* pushw pushs a 16-bit word*/
+pushw %ds
+pushw $0x0
+pushw %es
 
+pushal
+movl $GD_KD, %eax
+movw %ax, %ds
+movw %ax, %es
+pushl %esp
+call trap
