@@ -189,17 +189,21 @@ trap_dispatch(struct Trapframe *tf)
 		case T_BRKPT:
 			monitor(tf);
 			return ;
-		case T_PGFLT:
+		case T_PGFLT :
 			page_fault_handler(tf);
-			return;
-		case T_SYSCALL:
-			uint32_t syscallno = tf->tf_regs.reg_eax;
-			uint32_t a1=tf->tf_regs.reg_edx;
-			uint32_t a2=tf->tf_regs.reg_ecx;
-			uint32_t a3=tf->tf_regs.reg_ebx;
-			uint32_t a4=tf->tf_regs.reg_edi;
-			uint32_t a5=tf->tf_regs.reg_esi;
-			return	syscall(syscallno,a1,a2,a3,a4,a5);
+			return ;
+		case T_SYSCALL :
+			{
+			uint32_t sysno = tf->tf_regs.reg_eax;
+			uint32_t a1 = tf->tf_regs.reg_edx;
+			uint32_t a2 = tf->tf_regs.reg_ecx;
+			uint32_t a3 = tf->tf_regs.reg_ebx;
+			uint32_t a4 = tf->tf_regs.reg_edi;
+			uint32_t a5 = tf->tf_regs.reg_esi;
+			uint32_t ret = syscall(sysno,a1,a2,a3,a4,a5);
+			tf->tf_regs.reg_eax = ret;
+			return ;
+			}
 	}
 	// Unexpected trap: The user process or the kernel has a bug.
 	print_trapframe(tf);
