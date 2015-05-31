@@ -214,12 +214,12 @@ mem_init(void)
 	//////////////////////////////////////////////////////////////////////
 	// Map all of physical memory at KERNBASE.
 	// Ie.  the VA range [KERNBASE, 2^32) should map to
-	//      the PA range [0, 2^32 - KERNBASE)
+	//      the PA range [0, 2^32 - KERNBASE)                    // 2^32 - KERNBASE == 0x10000022 , But I don't  know why
 	// We might not have 2^32 - KERNBASE bytes of physical memory, but
 	// we just set up the mapping anyway.
 	// Permissions: kernel RW, user NONE
 	// Your code goes here:
-	boot_map_region(kern_pgdir,KERNBASE,(2^32) - KERNBASE,0,PTE_W|PTE_P);        
+	boot_map_region(kern_pgdir,KERNBASE,0x100000000 - KERNBASE,0,PTE_W|PTE_P);        
 
 	// Check that the initial page directory has been set up correctly.
 	check_kern_pgdir();
