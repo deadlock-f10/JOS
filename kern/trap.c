@@ -184,7 +184,6 @@ trap_dispatch(struct Trapframe *tf)
 {
 	// Handle processor exceptions.
 	// LAB 3: Your code here.
-	// SETGATE
 	switch(tf->tf_trapno){
 		case T_BRKPT:
 			monitor(tf);
