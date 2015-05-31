@@ -439,9 +439,9 @@ static void
 boot_map_region(pde_t *pgdir, uintptr_t va, size_t size, physaddr_t pa, int perm)
 {
 	// Fill this function in
-	/*assert(size % PGSIZE == 0);
+	//assert(size % PGSIZE == 0);
 	assert(va % PGSIZE == 0);
-	assert(pa % PGSIZE == 0);*/
+	assert(pa % PGSIZE == 0);
 	int mapTimes = size/PGSIZE , i=0;
 	pte_t *	pt_entry; 
 	for(i=0; i< mapTimes;i++){
@@ -596,7 +596,15 @@ mmio_map_region(physaddr_t pa, size_t size)
 	// Hint: The staff solution uses boot_map_region.
 	//
 	// Your code here:
-	panic("mmio_map_region not implemented");
+
+	size_t rounded_size = ROUNDUP(size,PGSIZE);
+	uintptr_t ret_base = base;
+	if(rounded_size + base >= MMIOLIM)
+		panic("MMIO overflows!!!");
+	boot_map_region(kern_pgdir,base,rounded_size,pa,(PTE_PCD|PTE_PWT|PTE_W));
+	base+=rounded_size;
+	return ret_base;
+//	panic("mmio_map_region not implemented");
 }
 
 static uintptr_t user_mem_check_addr;
