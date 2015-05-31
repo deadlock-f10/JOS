@@ -193,12 +193,13 @@ mem_init(void)
 	//////////////////////////////////////////////////////////////////////
 	// Map all of physical memory at KERNBASE.
 	// Ie.  the VA range [KERNBASE, 2^32) should map to
-	//      the PA range [0, 2^32 - KERNBASE)
+	//      the PA range [0, 2^32 - KERNBASE)         //Warning here : 2^32 - KERNBASE == 0x10000022  , But I dont know why
 	// We might not have 2^32 - KERNBASE bytes of physical memory, but
 	// we just set up the mapping anyway.
 	// Permissions: kernel RW, user NONE
 	// Your code goes here:
-	boot_map_region(kern_pgdir,KERNBASE,(2^32) - KERNBASE,0,PTE_W|PTE_P);        
+	//boot_map_region(kern_pgdir,KERNBASE,(2^32) - KERNBASE,0,PTE_W|PTE_P);         So we can't use (2^32) - KERNBASE
+	boot_map_region(kern_pgdir,KERNBASE,0x100000000 - KERNBASE,0,PTE_W|PTE_P);        
 
 	// Check that the initial page directory has been set up correctly.
 	check_kern_pgdir();
@@ -384,14 +385,15 @@ static void
 boot_map_region(pde_t *pgdir, uintptr_t va, size_t size, physaddr_t pa, int perm)
 {
 	// Fill this function in
-	/*assert(size % PGSIZE == 0);
+	//assert(size % PGSIZE == 0);
 	assert(va % PGSIZE == 0);
-	assert(pa % PGSIZE == 0);*/
-	int mapTimes = size/PGSIZE , i=0;
+	assert(pa % PGSIZE == 0);
+	int mapTimes = ROUNDUP(size,PGSIZE)/PGSIZE , i=0;
+	//int mapTimes = size / PGSIZE , i = 0;
 	pte_t *	pt_entry; 
 	for(i=0; i< mapTimes;i++){
 		pt_entry = pgdir_walk(pgdir,(void *)va,1);
-		*pt_entry  = (pa|(perm|PTE_P));
+		*pt_entry  = (PTE_ADDR(pa)|(perm|PTE_P));
 		va+=PGSIZE;
 		pa+=PGSIZE;
 	}
@@ -695,7 +697,10 @@ check_kern_pgdir(void)
 				assert(pgdir[i] & PTE_P);
 				assert(pgdir[i] & PTE_W);
 			} else
+			{
+			//	cprintf("i is %x\n",i);
 				assert(pgdir[i] == 0);
+			}
 			break;
 		}
 	}
