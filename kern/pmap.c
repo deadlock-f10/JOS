@@ -408,11 +408,11 @@ boot_map_region(pde_t *pgdir, uintptr_t va, size_t size, physaddr_t pa, int perm
 //	assert(size % PGSIZE == 0);
 	assert(va % PGSIZE == 0);
 	assert(pa % PGSIZE == 0);
-	int mapTimes = size/PGSIZE , i=0;
+	int mapTimes = (ROUNDUP(size,PGSIZE))/PGSIZE , i=0;
 	pte_t *	pt_entry; 
 	for(i=0; i< mapTimes;i++){
 		pt_entry = pgdir_walk(pgdir,(void *)va,1);
-		*pt_entry  = (pa|(perm|PTE_P));
+		*pt_entry  = (PTE_ADDR(pa)|(perm|PTE_P));
 		va+=PGSIZE;
 		pa+=PGSIZE;
 	}
