@@ -274,6 +274,10 @@ mem_init_mp(void)
 	//
 	// LAB 4: Your code here:
 
+	int i;
+	for(i=0 ; i < NCPU ; i++){
+		boot_map_region(kern_pgdir,(KSTACKTOP - i * (KSTKSIZE + KSTKGAP) - KSTKSIZE),KSTKSIZE,PADDR(&percpu_kstacks[i]),PTE_W|PTE_P);
+	}
 }
 
 // --------------------------------------------------------------
@@ -317,7 +321,7 @@ page_init(void)
 	size_t EXTPHYSMEMPage= (size_t)EXTPHYSMEM/PGSIZE;
 	size_t KernelPage = ROUNDUP( PADDR((char *)boot_alloc(0)),PGSIZE)/PGSIZE;
 	for (i = 0; i < npages; i++) {
-		if(i==0 ||(i>=IOPHYSMEMPage && i<EXTPHYSMEMPage)||(i>=EXTPHYSMEMPage && i<KernelPage))
+		if(i==0 ||(i>=IOPHYSMEMPage && i<EXTPHYSMEMPage)||(i>=EXTPHYSMEMPage && i<KernelPage)||(i == (MPENTRY_PADDR/PGSIZE)))
 			continue;
 		pages[i].pp_ref = 0;
 		pages[i].pp_link = page_free_list;
