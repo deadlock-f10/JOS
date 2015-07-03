@@ -379,14 +379,13 @@ page_fault_handler(struct Trapframe *tf)
 	//   (the 'tf' variable points at 'curenv->env_tf').
 
 	// LAB 4: Your code here.
-
 	if(curenv->env_pgfault_upcall != NULL){
-		user_mem_assert(curenv,(void *)(UXSTACKTOP - PGSIZE),PGSIZE,PTE_U|PTE_W);
 	struct UTrapframe *utf=NULL;
 		if((UXSTACKTOP-PGSIZE<=tf->tf_esp)&&(tf->tf_esp<UXSTACKTOP)) 
 				utf=(struct UTrapframe*)(tf->tf_esp-sizeof(struct UTrapframe)-4); 
 		else 
 			utf=(struct UTrapframe*)(UXSTACKTOP-sizeof(struct UTrapframe));
+		user_mem_assert(curenv,(void *)(utf),sizeof(struct UTrapframe),PTE_U|PTE_W);
 	utf->utf_eflags=tf->tf_eflags;
 	utf->utf_eip=tf->tf_eip;
 	utf->utf_err=tf->tf_err;

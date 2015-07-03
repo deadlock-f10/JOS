@@ -11,6 +11,8 @@
 // Custom page fault handler - if faulting page is copy-on-write,
 // map in our own private writable copy.
 //
+
+
 static void
 pgfault(struct UTrapframe *utf)
 {
@@ -25,7 +27,7 @@ pgfault(struct UTrapframe *utf)
 	//   (see <inc/memlayout.h>).
 
 	// LAB 4: Your code here.
-	if(((err & FEC_WR) == 0) == 0)
+	if((err & FEC_WR) == 0)
 		panic("pgfault: not a write attempt\n");
 	if((uvpt[PGNUM(addr)] & PTE_COW) == 0)
 		panic("pgfault: attempt to access a non-COW page");
@@ -36,17 +38,17 @@ pgfault(struct UTrapframe *utf)
 	//   You should make three system calls.
 
 	// LAB 4: Your code here.
-	int  ret = sys_page_alloc(thisenv->env_id,PFTEMP,(PTE_W|PTE_U|PTE_P));
+	envid_t thisid = sys_getenvid();
+	int  ret = sys_page_alloc(thisid,PFTEMP,(PTE_W|PTE_U|PTE_P));
 	if(ret < 0)
 		panic("pgfault: %e",ret);
 	memcpy(PFTEMP,(void *)ROUNDDOWN(addr,PGSIZE),PGSIZE);
-	if((ret = sys_page_map(thisenv->env_id,PFTEMP,thisenv->env_id,(void *)ROUNDDOWN(addr,PGSIZE),(PTE_W|PTE_U|PTE_P))) < 0)
+	if((ret = sys_page_map(thisid,PFTEMP,thisid,(void *)ROUNDDOWN(addr,PGSIZE),(PTE_W|PTE_U|PTE_P))) < 0)
 		panic("pgfault: %e",ret);
-	if((ret = sys_page_unmap(thisenv->env_id,PFTEMP)) < 0)
+	if((ret = sys_page_unmap(thisid,PFTEMP)) < 0)
 		panic("pgfault: %e",ret);
 	//panic("pgfault not implemented");
 }
-
 //
 // Map our virtual page pn (address pn*PGSIZE) into the target envid
 // at the same virtual address.  If the page is writable or copy-on-write,
@@ -58,21 +60,23 @@ pgfault(struct UTrapframe *utf)
 // Returns: 0 on success, < 0 on error.
 // It is also OK to panic on error.
 //
+
 static int
 duppage(envid_t envid, unsigned pn)
 {
 	int ret;
 	envid_t thisid = sys_getenvid(); 
-	void * addr = (void *)(pn<<PTXSHIFT);
-	if(((uvpt[pn] & PTE_P) == PTE_P)|((uvpt[pn] & PTE_COW) == PTE_COW))
+	//void * addr = (void *)(pn<<PTXSHIFT);
+	void * addr = (void *)((uint32_t)pn * PGSIZE);
+	if(((uvpt[pn] & PTE_P) > 0)|((uvpt[pn] & PTE_COW) > 0))
 	{
-		if(( ret = sys_page_map(thisid,addr,envid,(void *)(pn<<PTXSHIFT),(PTE_COW|PTE_P|PTE_U))) < 0)
+		if(( ret = sys_page_map(thisid,addr,envid,addr,(PTE_COW|PTE_P|PTE_U))) < 0)
 			panic("duppage : %e\n",ret);
-		if(( ret = sys_page_map(thisid,addr,thisenv->env_id,(void *)(pn<<PTXSHIFT),(PTE_COW|PTE_P|PTE_U))) < 0)
+		if(( ret = sys_page_map(thisid,addr,thisid,addr,(PTE_COW|PTE_P|PTE_U))) < 0)
 			panic("duppage : %e\n",ret);
 	}
 	else
-		if((ret = sys_page_map(thisenv->env_id,addr,envid,(void *)(pn<<PTXSHIFT),(PTE_P|PTE_U))) < 0)
+		if((ret = sys_page_map(thisid,addr,envid,addr,(PTE_P|PTE_U))) < 0)
 			panic("duppage : %e\n",ret);
 
 	// LAB 4: Your code here.
@@ -100,8 +104,8 @@ envid_t
 fork(void)
 {
 	// LAB 4: Your code here.
-	envid_t childID,thisid = sys_getenvid();
 	set_pgfault_handler(pgfault);
+	envid_t childID;
 	int ret;
 	childID = sys_exofork();
 	if( childID < 0)
@@ -111,9 +115,9 @@ fork(void)
 		thisenv = &envs[ENVX(sys_getenvid())];
 		return 0;
 	}
-	unsigned addr = UTOP - 2*PGSIZE;
+	uint32_t addr =(UTOP - 2*PGSIZE);
 	for(;addr >= UTEXT ; addr -= PGSIZE){
-		if(((uvpd[PDX(addr)] & PTE_P) == PTE_P) & ((uvpt[PGNUM(addr)] & PTE_P) == PTE_P))
+		if(((uvpd[PDX(addr)] & PTE_P) > 0) && ((uvpt[PGNUM(addr)] & PTE_P) > 0))         // can not replace '&&' by '&'
 			duppage(childID,PGNUM(addr));
 	}
 	if((ret = sys_page_alloc(childID,(void *)(UXSTACKTOP - PGSIZE),(PTE_W | PTE_P | PTE_U))) < 0)
@@ -125,8 +129,6 @@ fork(void)
 	return childID;
 	panic("fork not implemented");
 }
-
-// Challenge!
 int
 sfork(void)
 {

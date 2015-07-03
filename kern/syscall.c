@@ -141,6 +141,7 @@ sys_env_set_pgfault_upcall(envid_t envid, void *func)
     if(envid2env(envid, &e, 1) < 0)
 		return -E_BAD_ENV;
 	e->env_pgfault_upcall = func;
+	user_mem_assert(e,(void *)func,(size_t)PGSIZE,PTE_U);
 	return 0;
 	panic("sys_env_set_pgfault_upcall not implemented");
 }
