@@ -11,6 +11,7 @@ void sched_halt(void);
 void
 sched_yield(void)
 {
+	static int j=0;
 	//struct Env *idle;
 	int start = (curenv == NULL) ? (NENV-1) : ENVX(curenv->env_id) ;
 	int i = start;

@@ -314,7 +314,38 @@ static int
 sys_ipc_try_send(envid_t envid, uint32_t value, void *srcva, unsigned perm)
 {
 	// LAB 4: Your code here.
-	panic("sys_ipc_try_send not implemented");
+	struct Env * e = NULL; 
+	int ret;
+	if((ret=envid2env(envid,&e,0)) < 0)
+		return ret;
+	if(e->env_ipc_recving == false)
+		return -E_IPC_NOT_RECV;
+	if(((uint32_t)srcva >= UTOP) | ((uint32_t)(e->env_ipc_dstva) >= UTOP)) // should we consider dstvahere?
+	//if((uint32_t)srcva >= UTOP)
+		e->env_ipc_perm = 0;
+	else{
+		if(((uint32_t)srcva % PGSIZE) != 0)
+			return -E_INVAL;
+		if(((perm & PTE_U) == 0) | ((perm & PTE_P) == 0))
+			return -E_INVAL;
+		if((~PTE_SYSCALL & perm) != 0 )	
+			return -E_INVAL;
+		pte_t *pt_entry;
+		struct PageInfo *pp;
+		if((pp = page_lookup(curenv->env_pgdir,srcva,&pt_entry)) == NULL)
+			return -E_INVAL;
+		if(((perm & PTE_W) == PTE_W) && (((*pt_entry) & PTE_W) == 0))
+			return -E_INVAL;
+		//if((ret = sys_page_map(curenv->env_id,srcva,envid,e->env_ipc_dstva,perm)) < 0)               can't use this function because it'll check env with perm=1
+		if((ret = page_insert(e->env_pgdir,pp,e->env_ipc_dstva,perm)) < 0)
+			return ret;
+		e->env_ipc_perm = perm;
+		}
+	e->env_ipc_value = value; 
+	e->env_ipc_from = curenv->env_id;
+	e->env_ipc_recving = false;
+	e->env_status = ENV_RUNNABLE;
+	return 0;
 }
 
 // Block until a value is ready.  Record that you want to receive
@@ -332,7 +363,11 @@ static int
 sys_ipc_recv(void *dstva)
 {
 	// LAB 4: Your code here.
-	panic("sys_ipc_recv not implemented");
+	if(((uintptr_t)dstva < UTOP) && (((uintptr_t)dstva % PGSIZE) != 0))
+		return -E_INVAL;
+	curenv->env_ipc_recving = true;
+	curenv->env_ipc_dstva = dstva;
+	curenv->env_status = ENV_NOT_RUNNABLE;
 	return 0;
 }
 
@@ -352,6 +387,10 @@ syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, 
 			break;
 		case SYS_cgetc :
 			return sys_cgetc();
+		case SYS_ipc_try_send :
+			return sys_ipc_try_send((envid_t)a1,(uint32_t)a2,(void *)a3,(unsigned)a4);
+		case SYS_ipc_recv :
+			return sys_ipc_recv((void *)a1);
 		case SYS_getenvid:
 			return sys_getenvid();
 		case SYS_env_destroy:

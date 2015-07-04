@@ -91,6 +91,14 @@ trap_init(void)
 
 	extern void	routine_syscall();
 
+	extern void routine_timer();
+	extern void routine_kbd();
+	extern void routine_serial();
+	extern void routine_spurious();
+	extern void routine_ide();
+	extern void routine_error();
+
+
 	SETGATE(idt[T_DIVIDE],0,GD_KT,routine_divide,0);     // why all istrap==0 ??? 
 	SETGATE(idt[T_DEBUG],0,GD_KT,routine_debug,0); 
 	SETGATE(idt[T_NMI],0,GD_KT,routine_nmi,0);
@@ -112,6 +120,13 @@ trap_init(void)
 
 	SETGATE(idt[T_SYSCALL],0,GD_KT,routine_syscall,3);
 
+
+	SETGATE(idt[IRQ_OFFSET+IRQ_TIMER],0,GD_KT,routine_timer,3);
+	SETGATE(idt[IRQ_OFFSET+IRQ_KBD],0,GD_KT,routine_kbd,3);
+	SETGATE(idt[IRQ_OFFSET+IRQ_SPURIOUS],0,GD_KT,routine_spurious,3);
+	SETGATE(idt[IRQ_OFFSET+IRQ_SERIAL],0,GD_KT,routine_serial,3);
+	SETGATE(idt[IRQ_OFFSET+IRQ_IDE],0,GD_KT,routine_ide,3);
+	SETGATE(idt[IRQ_OFFSET+IRQ_ERROR],0,GD_KT,routine_error,3);
 	// LAB 3: Your code here.
 
 	// Per-CPU setup 
@@ -262,6 +277,10 @@ trap_dispatch(struct Trapframe *tf)
 	// Handle clock interrupts. Don't forget to acknowledge the
 	// interrupt using lapic_eoi() before calling the scheduler!
 	// LAB 4: Your code here.
+	if (tf->tf_trapno == IRQ_OFFSET + IRQ_TIMER) {
+		lapic_eoi();
+		sched_yield();
+	}
 
 	// Unexpected trap: The user process or the kernel has a bug.
 	print_trapframe(tf);
