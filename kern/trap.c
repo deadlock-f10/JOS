@@ -15,7 +15,6 @@
 #include <kern/spinlock.h>
 
 static struct Taskstate ts;
-
 /* For debugging, so print_trapframe can distinguish between printing
  * a saved trapframe and printing the current trapframe and print some
  * additional information in the latter case.
@@ -284,7 +283,15 @@ trap_dispatch(struct Trapframe *tf)
 
 	// Handle keyboard and serial interrupts.
 	// LAB 5: Your code here.
-
+	if (tf->tf_trapno == IRQ_OFFSET + IRQ_SERIAL) {  
+       serial_intr();  
+       return;  
+ 	}  
+  
+   if (tf->tf_trapno == IRQ_OFFSET + IRQ_KBD)  {  
+       kbd_intr();  
+       return;  
+    }
 	// Unexpected trap: The user process or the kernel has a bug.
 	print_trapframe(tf);
 	if (tf->tf_cs == GD_KT)

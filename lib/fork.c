@@ -67,8 +67,15 @@ duppage(envid_t envid, unsigned pn)
 	int ret;
 	envid_t thisid = sys_getenvid(); 
 	//void * addr = (void *)(pn<<PTXSHIFT);
+	//if((uvpt[pn] & PTE_P) == 0)
+	//	return -E_INVAL;
 	void * addr = (void *)((uint32_t)pn * PGSIZE);
-	if(((uvpt[pn] & PTE_P) > 0)|((uvpt[pn] & PTE_COW) > 0))
+	if((uvpt[pn] & PTE_SHARE) == PTE_SHARE){
+		int perm = PGOFF(uvpt[pn]) & PTE_SYSCALL;
+		if(((ret = sys_page_map(thisid,addr,envid,addr,perm))) < 0)
+			panic("duppage : %e\n",ret);
+	}
+	else if( ((uvpt[pn] & PTE_P) > 0) |((uvpt[pn] & PTE_COW) > 0))
 	{
 		if(( ret = sys_page_map(thisid,addr,envid,addr,(PTE_COW|PTE_P|PTE_U))) < 0)
 			panic("duppage : %e\n",ret);
