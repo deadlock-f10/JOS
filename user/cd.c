@@ -5,7 +5,6 @@ usage(void)
 	printf("usage: cd [file...]\n");
 	exit();
 }
-
 void cd(char *path){
 	int r;
 	struct Stat st ;
@@ -23,9 +22,12 @@ void cd(char *path){
 }
 void goback(){
 	int i;
-	for(i=strlen(cur_dir)-2 ; i > 0; i++)
+	for(i=strlen(cur_dir)-2 ; i > 0; i--)
 		if(cur_dir[i] != '/')
+		{
 			cur_dir[i] = '\0';
+			return ;
+		}
 }
 void
 umain(int argc, char **argv)
@@ -48,9 +50,5 @@ umain(int argc, char **argv)
 			cd(path);
 		}
 	}
-//	cprintf("in cd :cur_dir %s",cur_dir);
-/*	sys_page_alloc(thisenv->env_id,PFTEMP,PTE_SYSCALL);
-	strcpy((char *)PFTEMP , cur_dir);
-	ipc_send(sh_envid,1,PFTEMP,PTE_SYSCALL);*/
 }
 

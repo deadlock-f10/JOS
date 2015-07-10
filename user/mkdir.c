@@ -8,8 +8,6 @@ mkdir(const char *path){
 		panic("create dir %s: %e", path,fd);
 	if((r = stat(path, &st)) < 0)
 		panic("stat %s: %e", path, r);
-	if(st.st_isdir)
-		cprintf("create directory %s successfully!\n",path);
 	close(fd);
 	return 0;
 }
@@ -26,6 +24,11 @@ umain(int argc, char **argv)
 	if (argc != 2)
 		usage();
 	else
-		mkdir(argv[1]);
+	{
+		char t[MAXPATHLEN];  
+		strcpy(t,argv[1]);
+		toAbsolutePath(t);
+		mkdir(t);
+	}
 }
 

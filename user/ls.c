@@ -12,7 +12,7 @@ ls(const char *path, const char *prefix)
 	struct Stat st;
 
 	if ((r = stat(path, &st)) < 0)
-		panic("stat %s: %e", path, r);
+		cprintf("stat %s: %e", path, r);
 	if (st.st_isdir && !flag['d'])
 		lsdir(path, prefix);
 	else
@@ -85,10 +85,15 @@ umain(int argc, char **argv)
 	else {
 		for (i = 1; i < argc; i++)
 		{
-			char t[MAXPATHLEN];  
-			strcpy(t,argv[i]);
-			toAbsolutePath(t);
-			ls(t,"");
+			if(argv[i][0] != '/')
+			{
+				char t[MAXPATHLEN];  
+				strcpy(t,argv[i]);
+				toAbsolutePath(t);
+				ls(t,"");
+			}
+			else
+				ls(argv[i],"");
 		}
 	}
 }
