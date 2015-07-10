@@ -27,10 +27,12 @@
 void	umain(int argc, char **argv);
 
 // libmain.c or entry.S
+extern int sh_envid;
 extern const char *binaryname;
 extern const volatile struct Env *thisenv;
 extern const volatile struct Env envs[NENV];
 extern const volatile struct PageInfo pages[];
+extern char *cur_dir;
 
 // exit.c
 void	exit(void);
@@ -40,6 +42,7 @@ void	set_pgfault_handler(void (*handler)(struct UTrapframe *utf));
 
 // readline.c
 char*	readline(const char *buf);
+char * toAbsolutePath(char *t);
 
 // syscall.c
 void	sys_cputs(const char *string, size_t len);

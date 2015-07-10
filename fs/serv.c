@@ -133,6 +133,9 @@ serve_open(envid_t envid, struct Fsreq_open *req,
 				cprintf("file_create failed: %e", r);
 			return r;
 		}
+		// Create directory
+		if(req->req_omode & O_MKDIR)                
+			f->f_type = FTYPE_DIR; 
 	} else {
 try_open:
 		if ((r = file_open(path, &f)) < 0) {

@@ -1,8 +1,19 @@
 #include <inc/stdio.h>
 #include <inc/error.h>
+#include <inc/string.h>
+#include <inc/memlayout.h>
 
 #define BUFLEN 1024
+char *cur_dir = (char *)(USTACKTOP);
+//int sh_envid=0x2001;
 static char buf[BUFLEN];
+void toAbsolutePath(char *t){
+	char temp[BUFLEN];																						
+	strcpy(temp,cur_dir);
+	strcat(temp,t);
+	strcat(temp,"/");
+	strcpy(t,temp);
+}
 
 char *
 readline(const char *prompt)

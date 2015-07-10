@@ -24,7 +24,7 @@ struct Dev {
 };
 
 struct FdFile {
-	int id;
+	int id;              // file ID
 };
 
 struct Fd {
