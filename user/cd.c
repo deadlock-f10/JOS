@@ -22,10 +22,10 @@ void cd(char *path){
 }
 void goback(){
 	int i;
-	for(i=strlen(cur_dir)-2 ; i > 0; i--)
-		if(cur_dir[i] != '/')
+	for(i=strlen(cur_dir)-2 ; i >= 0; i--)
+		if(cur_dir[i] == '/')
 		{
-			cur_dir[i] = '\0';
+			cur_dir[i+1] = '\0';
 			return ;
 		}
 }
