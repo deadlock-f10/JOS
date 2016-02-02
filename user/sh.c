@@ -4,6 +4,7 @@
 int debug = 0;
 
 
+
 // gettoken(s, 0) prepares gettoken for subsequent calls and returns 0.
 // gettoken(0, token) parses a shell token from the previously set string,
 // null-terminates that token, stores the token pointer in '*token',
@@ -11,6 +12,16 @@ int debug = 0;
 // Subsequent calls to 'gettoken(0, token)' will return subsequent
 // tokens from the string.
 int gettoken(char *s, char **token);
+char *clean_head(char *s){
+	while((*s == ' ') | (*s == '\b' ))
+		s++;
+	return s;
+}
+bool is_cd(char *buf){
+	if((strlen(buf) > 3) && (strncmp(buf,"cd ",3) == 0))
+		return true;
+	return false;
+}
 
 
 // Parse a shell command from string 's' and execute it.
@@ -37,6 +48,12 @@ again:
 				cprintf("too many arguments\n");
 				exit();
 			}
+			// convert to absolute path
+	/*		if((argc != 0) & (t[0] != '-') & (t[0] != '/'))
+			{
+				strcpy(temp,cur_dir);
+				strcat(temp,t);
+			}*/
 			argv[argc++] = t;
 			break;
 
@@ -45,6 +62,13 @@ again:
 			if (gettoken(0, &t) != 'w') {
 				cprintf("syntax error: < not followed by word\n");
 				exit();
+			}
+			if ((fd = open(t, O_RDONLY)) < 0) {
+				cprintf("open %s for write: %e", t, fd); exit();
+			}
+			if (fd != 0){
+				dup(fd,0);
+				close(fd);
 			}
 			// Open 't' for reading as file descriptor 0
 			// (which environments use as standard input).
@@ -55,7 +79,7 @@ again:
 			// then close the original 'fd'.
 
 			// LAB 5: Your code here.
-			panic("< redirection not implemented");
+			//panic("< redirection not implemented");
 			break;
 
 		case '>':	// Output redirection
@@ -261,6 +285,8 @@ umain(int argc, char **argv)
 {
 	int r, interactive, echocmds;
 	struct Argstate args;
+	sys_page_alloc(thisenv->env_id,(void *)USTACKTOP,PTE_SYSCALL | PTE_SHARE);
+	strcpy(cur_dir,"/");
 
 	interactive = '?';
 	echocmds = 0;
@@ -293,8 +319,9 @@ umain(int argc, char **argv)
 
 	while (1) {
 		char *buf;
-
-		buf = readline(interactive ? "$ " : NULL);
+		char prompt[1024] = "root@";
+		strcat(prompt,cur_dir);
+		buf = readline(interactive ? strcat(prompt,"# ") : NULL);
 		if (buf == NULL) {
 			if (debug)
 				cprintf("EXITING\n");
@@ -308,6 +335,7 @@ umain(int argc, char **argv)
 			printf("# %s\n", buf);
 		if (debug)
 			cprintf("BEFORE FORK\n");
+		buf=clean_head(buf);		
 		if ((r = fork()) < 0)
 			panic("fork: %e", r);
 		if (debug)
@@ -319,4 +347,5 @@ umain(int argc, char **argv)
 			wait(r);
 	}
 }
+
 

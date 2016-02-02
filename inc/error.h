@@ -26,7 +26,8 @@ enum {
 	E_NOT_EXEC	,	// File not a valid executable
 	E_NOT_SUPP	,	// Operation not supported
 
-	MAXERROR
+	MAXERROR    ,
+	E_NO_SYS
 };
 
 #endif	// !JOS_INC_ERROR_H */

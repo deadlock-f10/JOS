@@ -12,7 +12,7 @@ ls(const char *path, const char *prefix)
 	struct Stat st;
 
 	if ((r = stat(path, &st)) < 0)
-		panic("stat %s: %e", path, r);
+		cprintf("stat %s: %e", path, r);
 	if (st.st_isdir && !flag['d'])
 		lsdir(path, prefix);
 	else
@@ -40,9 +40,8 @@ void
 ls1(const char *prefix, bool isdir, off_t size, const char *name)
 {
 	const char *sep;
-
 	if(flag['l'])
-		printf("%11d %c ", size, isdir ? 'd' : '-');
+			printf("%-9s%11d    ",(isdir == 0 ? "Regular" : "Directory"), size );
 	if(prefix) {
 		if (prefix[0] && prefix[strlen(prefix)-1] != '/')
 			sep = "/";
@@ -82,10 +81,20 @@ umain(int argc, char **argv)
 		}
 
 	if (argc == 1)
-		ls("/", "");
+		ls(cur_dir, "");
 	else {
 		for (i = 1; i < argc; i++)
-			ls(argv[i], argv[i]);
+		{
+			if(argv[i][0] != '/')
+			{
+				char t[MAXPATHLEN];  
+				strcpy(t,argv[i]);
+				toAbsolutePath(t);
+				ls(t,"");
+			}
+			else
+				ls(argv[i],"");
+		}
 	}
 }
 

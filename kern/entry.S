@@ -63,7 +63,7 @@ entry:
 	movl	%eax, %cr0
 
 	# Now paging is enabled, but we're still running at a low EIP
-	# (why is this okay?).  Jump up above KERNBASE before entering
+	# (why is this okay?-----We maped both[0,4M) and [KERNBASE,KERNBASE+4M) to physical address [0,4M) ).  Jump up above KERNBASE before entering
 	# C code.
 	mov	$relocated, %eax
 	jmp	*%eax
